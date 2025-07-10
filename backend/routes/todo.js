@@ -56,6 +56,7 @@ router.post('/', async (req, res) => {
 // Define a PUT route for marking a todo as completed
 router.put('/:todoId/completed', async (req, res) => {
     // Extract the `todoId` from the route parameter and convert it to a number
+    const todoId = Number(req.params.todoId);
 
     try {
         // Use Prisma to update the todo with the specified ID
@@ -92,6 +93,7 @@ router.delete("/:todoId", async (req, res) => {
         await prisma.todo.delete({
             where: {
                 id: todoId,     // Match the todo based on its unique ID 
+                completed: true,
             }
         });
 
