@@ -3,43 +3,79 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import supabase from '../client';
 
-function LoginForm() {
-  return (
-    <form className="space-y-4">
-      <div>
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          className="input input-bordered w-full"
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="password"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Password
-        </label>
-        <input
-          id="password"
-          type="text"
-          className="input input-bordered w-full"
-        />
-      </div>
-      <button type="submit" className="btn btn-primary w-full">
-        Login
-      </button>
-    </form>
-  );
-}
-
 export default function Login() {
+  const [alert, showAlert] = useState({
+    message: '',
+    show: false,
+  });
+
+  const navigate = useNavigate();
+
+  const { register, handleSubmit } = useForm({
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  // The values param comes from the handleSubmit function in useForm.
+  // It takes the values from the form and puts it in this function so we have access
+  const loginUser = async (values) => {
+    // Call Supabase's signInWithPassword method to log in with the provided values
+    // (email and password)
+    const { error } = await supabase.auth.signInWithPassword(values);
+
+    // Check if there was an error during login
+    if (error) {
+      // If there's an error, show an alert with the error message
+      showAlert({
+        show: true, // Display the alert
+        message: error.message, // Show the error message from the Supabase response
+      });
+    } else {
+      // If login is successful, navigate the user to the "/todos" page
+      navigate('/todos');
+    }
+  };
+
+  function LoginForm() {
+    return (
+      <form className="space-y-4" onSubmit={handleSubmit(loginUser)}>
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            className="input input-bordered w-full"
+            {...register('email')}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            type="text"
+            className="input input-bordered w-full"
+            {...register('password')}
+          />
+        </div>
+        <button type="submit" className="btn btn-primary w-full">
+          Login
+        </button>
+      </form>
+    );
+  }
+
   return (
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
       <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-md">
