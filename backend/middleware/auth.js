@@ -16,7 +16,7 @@ const verifyToken = (req, res, next) => {
 
     try {
         // Verify the token using the secret stored in the environment variable
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET);
 
         // Attach the decoded token payload (user information) to the request object
         req.user = decoded;
