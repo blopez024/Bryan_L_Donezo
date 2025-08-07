@@ -11,7 +11,11 @@ export default function Signup() {
 
   const navigate = useNavigate();
 
-  const { register, handleSubmit } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
     defaultValues: {
       username: '',
       email: '',
@@ -48,6 +52,7 @@ export default function Signup() {
               <button
                 onClick={() => showAlert({ message: '', show: false })}
                 className="btn btn-ghost btn-circle"
+                aria-label="Close alert"
               >
                 X
               </button>
@@ -70,10 +75,13 @@ export default function Signup() {
           </label>
           <input
             id="username"
-            type="username"
+            type="text"
             className="input input-bordered w-full"
-            {...register('username')}
+            {...register('username', { required: 'Username is required' })}
           />
+          {errors.username && (
+            <p className="text-red-500 text-sm">{errors.username.message}</p>
+          )}
         </div>
         <div>
           <label
@@ -86,8 +94,11 @@ export default function Signup() {
             id="email"
             type="email"
             className="input input-bordered w-full"
-            {...register('email')}
+            {...register('email', { required: 'Email is required' })}
           />
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email.message}</p>
+          )}
         </div>
         <div>
           <label
@@ -100,11 +111,20 @@ export default function Signup() {
             id="password"
             type="password"
             className="input input-bordered w-full"
-            {...register('password')}
+            {...register('password', {
+              required: 'Password is required',
+              minLength: {
+                value: 6,
+                message: 'Password must be at least 6 characters',
+              },
+            })}
           />
+          {errors.password && (
+            <p className="text-red-500 text-sm">{errors.password.message}</p>
+          )}
         </div>
         <button type="submit" className="btn btn-primary w-full">
-          Signup
+          {isSubmitting ? 'Signing up...' : 'Signup'}
         </button>
       </form>
     );
