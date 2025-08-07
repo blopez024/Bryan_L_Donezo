@@ -1,21 +1,11 @@
 import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import getAxiosClient from '../axios-instance';
 
 export default function Todos() {
   const modalRef = useRef();
-
-  const toggleNewTodoModal = () => {
-    console.log(modalRef);
-    // Check if the modal is currently open by accessing the `open` property of `modalRef`.
-    if (modalRef.current.open) {
-      // If the modal is open, close it by calling the `close()` method.
-      modalRef.current.close();
-    } else {
-      // If the modal is not open, open it by calling the `showModal()` method.
-      modalRef.current.showModal();
-    }
-  };
+  const queryClient = useQueryClient();
 
   const { register, handleSubmit } = useForm({
     defaultValues: {
@@ -24,13 +14,78 @@ export default function Todos() {
     },
   });
 
+  const { data, isError, isLoading } = useQuery({
+    queryKey: ['todos'],
+    queryFn: async () => {
+      const axiosInstance = await getAxiosClient();
+
+      console.log('axiosInstance:', axiosInstance);
+
+      const { data } = await axiosInstance.get('http://localhost:8080/todos');
+
+      console.log('newTodo:', data);
+
+      return data;
+    },
+  });
+
+  const { mutate: createNewTodo } = useMutation({
+    mutationKey: ['newTodo'],
+    mutationFn: async (newTodo) => {
+      const axiosInstance = await getAxiosClient();
+
+      const { data } = await axiosInstance.post(
+        'http://localhost:8080/todos',
+        newTodo,
+      );
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries('todos');
+    },
+  });
+
+  const { mutate: markAsCompleted } = useMutation({
+    mutationKey: ['markAsCompleted'],
+    mutationFn: async (todoId) => {
+      const axiosInstance = await getAxiosClient();
+
+      const { data } = await axiosInstance.put(
+        `http://localhost:8080/todos/${todoId}/completed`,
+      );
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries('todos');
+    },
+  });
+
+  if (isLoading) {
+    return <div className="">Loading Todos...</div>;
+  }
+
+  if (isError) {
+    return <div className="">There was an error</div>;
+  }
+
+  const toggleNewTodoModal = () => {
+    if (modalRef.current.open) {
+      modalRef.current.close();
+    } else {
+      modalRef.current.showModal();
+    }
+  };
+
   const handleNewTodo = (values) => {
+    createNewTodo(values);
     toggleNewTodoModal();
   };
 
   function NewTodoButton() {
     return (
-      <button className="btn btn-primary" onClick={toggleNewTodoModal}>
+      <button className="btn btn-primary" onClick={() => toggleNewTodoModal()}>
         New Todo
       </button>
     );
@@ -70,8 +125,8 @@ export default function Todos() {
               </button>
               <button
                 type="button"
+                onClick={() => toggleNewTodoModal()}
                 className="btn btn-ghost"
-                onClick={toggleNewTodoModal}
               >
                 Close
               </button>
@@ -82,9 +137,40 @@ export default function Todos() {
     );
   }
 
+  function TodoItemList() {
+    return (
+      <div className="w-lg h-sm flex column items-center justify-center gap-4">
+        {data && data.success && data.todos.length >= 1 && (
+          <ul className="flex column items-center justify-center gap-4">
+            {data.todos.map((todo) => (
+              <li key={todo.id} className="inline-flex items-center gap-4">
+                <div className="w-md">
+                  <h3 className="text-lg">{todo.name}</h3>
+                  <p className="text-sm">{todo.description}</p>
+                </div>
+                <div className="w-md">
+                  <label className="swap">
+                    <input
+                      type="checkbox"
+                      checked={todo.completed}
+                      onClick={() => markAsCompleted(todo.id)}
+                    />
+                    <div className="swap-on">Yes</div>
+                    <div className="swap-off">No</div>
+                  </label>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
   return (
     <>
       <NewTodoButton />
+      <TodoItemList />
       <TodoModal />
     </>
   );
