@@ -11,7 +11,11 @@ export default function Login() {
 
   const navigate = useNavigate();
 
-  const { register, handleSubmit } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
     defaultValues: {
       email: '',
       password: '',
@@ -40,21 +44,20 @@ export default function Login() {
 
   function LoginAlert() {
     return (
-      <>
-        {alert.show && (
-          <div className="alert alert-error">
-            <div className="inline-flex justify-stretch items-center">
-              {alert.message}
-              <button
-                onClick={() => showAlert({ message: '', show: false })}
-                className="btn btn-ghost btn-circle"
-              >
-                x
-              </button>
-            </div>
+      alert.show && (
+        <div className="alert alert-error">
+          <div className="inline-flex justify-stretch items-center">
+            <span>{alert.message}</span>
+            <button
+              onClick={() => showAlert({ message: '', show: false })}
+              className="btn btn-ghost btn-circle"
+              aria-label="Close alert"
+            >
+              x
+            </button>
           </div>
-        )}
-      </>
+        </div>
+      )
     );
   }
 
@@ -72,8 +75,11 @@ export default function Login() {
             id="email"
             type="email"
             className="input input-bordered w-full"
-            {...register('email')}
+            {...register('email', { required: 'Email is required' })}
           />
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email.message}</p>
+          )}
         </div>
         <div>
           <label
@@ -84,13 +90,20 @@ export default function Login() {
           </label>
           <input
             id="password"
-            type="text"
+            type="password"
             className="input input-bordered w-full"
-            {...register('password')}
+            {...register('password', { required: 'Password is required' })}
           />
+          {errors.password && (
+            <p className="text-red-500 text-sm">{errors.password.message}</p>
+          )}
         </div>
-        <button type="submit" className="btn btn-primary w-full">
-          Login
+        <button
+          type="submit"
+          className="btn btn-primary w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Logging in...' : 'Login'}
         </button>
       </form>
     );
