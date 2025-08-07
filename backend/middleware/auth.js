@@ -3,16 +3,18 @@ import jwt from 'jsonwebtoken';
 
 // Middleware function to verify the JSON Web Token (JWT)
 const verifyToken = (req, res, next) => {
-    // Extract the token from the Authorization header (if it exists)
-    const token = req.headers.authorization?.split(' ')[1];
+    const authHeader = req.headers.authorization;
 
-    // If not token is provided, respond with 401 Unauthorized status
-    if (!token) {
-        res.status(401).json({
+    // Check for Bearer token format
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
             success: false,
-            message: "Unauthorized Status"
+            message: 'Unauthorized: Invalid Authorization header format',
         });
     }
+
+    // Extract the token from the Authorization header (if it exists)
+    const token = authHeader.split(' ')[1];
 
     try {
         // Verify the token using the secret stored in the environment variable
@@ -24,14 +26,14 @@ const verifyToken = (req, res, next) => {
         // Proceed to the next middleware or route handler
         next();
     } catch (e) {
-        console.log(e);
+        console.log('JWT Verification Error:', e);
 
         // If token verification fails, respond with a 401 Unauthorized Status
-        res.status(401).json({
+        return res.status(401).json({
             success: false,
-            message: "Invalid Token"
+            message: 'Unauthorized: Invalid or expired Token',
         });
     }
-}
+};
 
 export default verifyToken;
